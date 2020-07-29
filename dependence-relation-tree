@@ -1,0 +1,101 @@
+# -*- coding:utf-8 -*-
+
+"""
+@Author: jsq
+@date: 2020/7/27
+@feeling: sa
+"""
+# 利用ltp对文章《一种基于模糊依存关系匹配的问答模型构建方法》  简单实现
+
+import os
+import math
+from collections import Counter
+from pyltp import SentenceSplitter  # 分句
+from pyltp import Segmentor  # 分词
+from pyltp import Postagger  # 词性标注
+from pyltp import Parser     # 依存句法分析
+LTP_DIR = "../3.4.0/ltp_data_v3.4.0"
+cws_model = os.path.join(LTP_DIR, "cws.model")
+pos_model = os.path.join(LTP_DIR, "pos.model")
+parser_model = os.path.join(LTP_DIR, "parser.model")
+
+segmentor = Segmentor()
+postagger = Postagger()
+parser = Parser()            # 初始化
+segmentor.load(cws_model)
+postagger.load(pos_model)
+parser.load(parser_model)    # 加载模型
+
+# result = segmentor.segment("")
+# postag = postagger.postag(result)
+# pars = parser.parse(result, postag)
+# print(list(result))
+# print(list(postag))
+# print("\t".join("%d:%s" % (A.head, A.relation) for A in pars))
+# print(list("%d:%s" % (A.head, A.relation) for A in pars))
+
+# pattern = "标准配置就是就是铁轮圈录入收音机是吗？"
+# seg = segmentor.segment(pattern)     # 分词结果
+# pos = postagger.postag(seg)          # 词性标注
+# pars = parser.parse(seg, pos)
+# next = list("%d" % A.head for A in pars)   # 父节点的下标列表  (seg的下标index+1)
+# relation = list("%s" % A.relation for A in pars)  # 与父节点的关系列表
+#
+# print(list(pos), "\n", list(seg), "\n", next)
+# print(relation)
+# pos = list(pos)
+
+
+def dependence_path(sentence):
+    seg = segmentor.segment(sentence)
+    pos = postagger.postag(seg)
+    pars = parser.parse(seg, pos)
+    next = list("%d" % A.head for A in pars)  # 父节点的下标列表  (seg的下标index+1)
+    relation = list("%s" % A.relation for A in pars)  # 与父节点的关系列表
+    pos = list(pos)
+    point2index = {}
+    point2relation = {}
+    result = []
+    Res = []
+    R = []
+    for i in range(len(pos)):
+        point2index[i] = int(next[i]) - 1  # 根节点为-1
+        point2relation[i] = relation[i]
+    for i in range(len(pos)):
+        # if pos[i] == "n" or pos[i] == "v" or pos[i] == "a":
+        if pos[i] == "n" or pos[i] == "v":
+            j = i
+            path = ""
+            while j != -1:
+                path += point2relation[j] + " "
+                j = point2index[j]
+            result.append(path.strip())
+        else:
+            continue
+    for i in range(len(result)):
+        if i == 0:
+            Res.extend(result[i].split())
+        else:
+            if result[i] in result[i-1]:
+                continue
+            else:
+                Res.extend(result[i].split())
+    return Res
+print(dependence_path("标准配置就是就是铁轮圈录入收音机是吗？"))
+
+
+def match_score(query, doc):
+    query_path = dependence_path(query)
+    doc_path = dependence_path(doc)
+    gamma = 1/(len(query_path)+len(doc_path))
+    dic = {}
+    score = 0.0
+    for i in query_path:
+        if dic.get(i, 0):  # 如果这种依存关系已经计算过则跳过
+            continue
+        else:
+            if i in doc_path:
+                score += math.log(gamma/(Counter(query_path)[i] * Counter(doc_path)[i]))
+        dic[i] = True
+    return score
+print(match_score("哦行，那你要不这样，吧您可以加我个微信吗？然后我可能这个星期，如果有空的话，我到时候提前跟您联系，然后过来先看一下好吧啊。", "啊对我给您说的计划，到时候您过来之前您的微信上咨询我，啊然后我就提前给你安排好了行吧。"))
