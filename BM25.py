@@ -7,8 +7,8 @@ import math
 from collections import Counter
 import numpy as np
 from tqdm import tqdm
-from bert4keras.tokenizers import Tokenizer
-from bert4keras.models import build_transformer_model
+# from bert4keras.tokenizers import Tokenizer
+# from bert4keras.models import build_transformer_model
 
 
 def load_stopwords(path):    # 加载停用词表
@@ -81,18 +81,18 @@ def edit_distance(query_1, query_2):                   # 判断query间相似度
     return dp[-1][-1]
 
 
-config_path = "../bert/chinese_L-12_H-768_A-12/bert_config.json"
-dict_path = "../bert/chinese_L-12_H-768_A-12/vocab.txt"
-checkpoint_path = "../bert/chinese_L-12_H-768_A-12/bert_model.ckpt"
-tokenizer = Tokenizer(dict_path, do_lower_case=True)
-model = build_transformer_model(config_path=config_path, checkpoint_path=checkpoint_path)
+# config_path = "../bert/chinese_L-12_H-768_A-12/bert_config.json"
+# dict_path = "../bert/chinese_L-12_H-768_A-12/vocab.txt"
+# checkpoint_path = "../bert/chinese_L-12_H-768_A-12/bert_model.ckpt"
+# tokenizer = Tokenizer(dict_path, do_lower_case=True)
+# model = build_transformer_model(config_path=config_path, checkpoint_path=checkpoint_path)
 
 
 def cosine_distance(query_1, query_2):
-    token_1, segment_1 = tokenizer.encode(query_1)
-    token_2, segment_2 = tokenizer.encode(query_2)
-    query_1_matrix = model.predict([np.array(token_1), np.array(segment_1)])
-    query_2_matrix = model.predict([np.array(token_2), np.array(segment_2)])
+    # token_1, segment_1 = tokenizer.encode(query_1)
+    # token_2, segment_2 = tokenizer.encode(query_2)
+    # query_1_matrix = model.predict([np.array(token_1), np.array(segment_1)])
+    # query_2_matrix = model.predict([np.array(token_2), np.array(segment_2)])
     def Sum(array, query_matrix):          # query bert词向量求和
         for i in range(len(query_matrix[0])):
             if array is None:
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     # print(bm25_model.idf)
     # print(bm25_model.realation_qi_d(["北京","奥运会","何时","召开"]))
     A = open("./result0729.txt", "a", encoding="utf-8")
-    document_list, documents = data_generator("./selfmake_document/document1.txt")
+    document_list, documents= data_generator("./selfmake_document/document1.txt")
     query_list, querys = data_generator("./selfmake_document/query.txt")
     # bm25_model = BM_25(document_list)
     # while True:
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         result = []
         for j in best_K:
             result.append(documents[j])
-        A.write(querys[i]+ "\t" + "answer======>" + "\t" + "\t".join(result) + "\n")
+        A.write(querys[i]+ "\t" + "answer======>  " + "\t".join(result) + "\n")
         # if document_list[i] in result:
         #     A.write(querys[i] + "\t" + "answer======>  " + "True" + "\n")
         # else:
