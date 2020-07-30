@@ -2,9 +2,7 @@
 @Author: jsq
 @date: 2020/7/29
 """
-
 # 对文章《一种基于潜在语义分析的问答系统答案定位方法》的实现
-
 from collections import Counter
 import numpy as np
 from tqdm import tqdm
@@ -104,22 +102,27 @@ class LSA(object):
                 continue
         # print(np.linalg.inv(self.matrix_Dk))
         _q_ = np.dot(np.dot(self.query.T, self.Uk), np.linalg.inv(self.matrix_Dk))
-        for document in range(self.num_document):
-            d = np.zeros((self.num_words, 1))
-            d[:, 0] = self.matrix[:, document]
-            _d_ = np.dot(np.dot(d.T, self.Uk), np.linalg.inv(self.matrix_Dk))
+        # D = np.zeros((self.num_words, self.num_document))
+
+        _D_ = np.dot(np.dot(self.matrix.T, self.Uk), np.linalg.inv(self.matrix_Dk))
+        # print(_D_.shape)
+        for document in tqdm(range(self.num_document)):
+            # d = np.zeros((self.num_words, 1))
+            _d_ = _D_[document, :]
+            # print(_d_.shape)
+            # _d_ = np.dot(np.dot(d.T, self.Uk), np.linalg.inv(self.matrix_Dk))
             # print(_d_)
             # print(np.dot(_q_, _d_.T))
             multi = np.linalg.norm(_q_) * np.linalg.norm(_d_)
             if not multi:
-                similarity = [[0]]
+                similarity = [0]
             else:
                 similarity = np.dot(_q_, _d_.T) / multi
             # print(similarity)
-            result.append(similarity[0][0])
+            result.append(similarity[0])
         # return self.document_list[result.index(max(result))]
-        # print(result)
         best_n = np.array(result).argsort()[::-1][:self.n]
+        print(best_n)
         return best_n
 
 
@@ -133,7 +136,7 @@ if __name__ == "__main__":
     #     ans = lsa.shoot(query)
     #     print(ans)
     #     print([documents[n] for n in ans])
-    A = open("./result0729_3.txt", "a", encoding="utf-8")
+    A = open("./result0730.txt", "a", encoding="utf-8")
     document_list, documents = data_generator("./selfmake_document/document1.txt")
     query_list, querys = data_generator("./selfmake_document/query.txt")
     lsa = LSA(document_list)
@@ -145,7 +148,7 @@ if __name__ == "__main__":
             result.append(documents[j])
         A.write(querys[i]+ "\t" + "answer======>  " + "\t".join(result) + "\n")
         # if document_list[i] in result:
-        #     A.write(querys[i] + "\t" + "answer======>  " + "True" + "\n")
+        #     A.write(querys[i] + "\t" + "answer======>"+"\t" + "True" + "\n")
         # else:
-        #     A.write(querys[i] + "\t" + "answer======>  " + "False" + "\n")
+        #     A.write(querys[i] + "\t" + "answer======>"+"\t" + "False" + "\n")
     A.close()
